@@ -27,10 +27,14 @@ fn analy_data(window: &tauri::Window, data: String) {
         let _ = window.emit("Temp", &cap[1]);
     }
     if let Some(cap) = rain_re.captures(&data) {
-        let rain_adc: f64 = (&cap[1]).trim().parse().expect("");
-        let rain_ph: f64 = (3940.0 - rain_adc).abs() / 100.0;
-        let rain: f64 = if rain_ph > 1.0 { rain_ph } else { 0.0 };
-        let _ = window.emit("Rain", format!("{:.2}", rain));
+        let rain_adc: f32 = (&cap[1]).trim().parse().expect("");
+        let result = if rain_adc < 4000.0 {
+            let h1 = 224.031 * (-0.001287 * rain_adc).exp() - 0.526624;
+            h1 * (6.0 * 6.0) / 314.1592
+        } else {
+            0.0
+        };
+        let _ = window.emit("Rain", format!("{:.2}", result));
     }
     if let Some(cap) = light_re.captures(&data) {
         let light_adc: f64 = (&cap[1]).trim().parse().expect("");
